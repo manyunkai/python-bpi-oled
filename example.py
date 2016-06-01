@@ -138,7 +138,7 @@ class MainContentController(threading.Thread):
 
         lines = ['<NETWORK>'.center(22), 'Bandwidth Usage:'.ljust(21)]
 
-        in_flow, out_flow = get_interface_flow('eth0')
+        in_flow, out_flow = get_interface_flow(['eth1', 'wlan0'])
 
         cst = time.time()
         flow_avg = [(in_flow - self.last_in_flow) / float(cst - self.lst) / 1048576.0,

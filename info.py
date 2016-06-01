@@ -14,6 +14,13 @@ import re
 
 
 def get_interfaces(match=None):
+    """
+    获取网络接口
+
+    :param match: 正则匹配条件，当传入此参数时，只有满足条件的才返回
+    :return: list
+    """
+
     f = os.popen("ifconfig -s|grep -v Iface|grep -v lo|awk '{print $1}'")
     interfaces = [interface.strip() for interface in f.readlines()]
     f.close()
@@ -25,6 +32,12 @@ def get_interfaces(match=None):
 
 
 def get_ip_address(ifname):
+    """
+    获取接口 IP 地址
+    :param ifname: 接口名称
+    :return: IP 地址，如果没有返回 '-'
+    """
+
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         return socket.inet_ntoa(fcntl.ioctl(
@@ -37,6 +50,12 @@ def get_ip_address(ifname):
 
 
 def get_memory_stat():
+    """
+    获取内存信息
+
+    :return: dict
+    """
+
     mem = {}
 
     f = open('/proc/meminfo')
@@ -54,6 +73,12 @@ def get_memory_stat():
 
 
 def get_load_stat():
+    """
+    获取系统负载信息
+
+    :return: dict
+    """
+
     f = open('/proc/loadavg')
     con = f.read().split()
     f.close()
@@ -67,7 +92,14 @@ def get_load_stat():
     }
 
 
-def get_interface_flow(interface):
+def get_interface_flow(interfaces):
+    """
+    获取网卡流量
+
+    :param interfaces: 要获取的网卡名称列表
+    :return: tuple：(流入流量, 流出流量)
+    """
+
     f = open('/proc/net/dev')
     flow_info = f.readlines()
     in_flow = []
@@ -75,8 +107,12 @@ def get_interface_flow(interface):
     f.close()
 
     for eth_dev in flow_info:
-        if interface in eth_dev:
-            in_flow.append(int(eth_dev.split(':')[1].split()[0]))
-            out_flow.append(int(eth_dev.split(':')[1].split()[8]))
+        try:
+            iface, data = [d.strip() for d in eth_dev.split(':')]
+        except ValueError:
+            continue
+        if iface in interfaces:
+            in_flow.append(int(data.split()[0]))
+            out_flow.append(int(data.split()[8]))
 
     return sum(in_flow), sum(out_flow)
